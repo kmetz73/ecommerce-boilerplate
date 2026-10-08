@@ -1,0 +1,5 @@
+# Explicitly opt in to publishing the development database on loopback.
+services:
+  db:
+    ports:
+      - '127.0.0.1:${DB_PORT:-5434}:5432'
