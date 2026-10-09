@@ -18,6 +18,7 @@
     "docs:structure": "pwsh -NoProfile -File ./scripts/generate-project-structure.ps1"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1147.0",
     "@base-ui/react": "^1.8.0",
     "@clerk/nextjs": "^7.9.4",
     "@prisma/adapter-pg": "^7.10.0",

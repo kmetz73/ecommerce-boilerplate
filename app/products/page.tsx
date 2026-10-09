@@ -4,6 +4,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { getCatalogForViewer } from '@/features/products/services/products';
 import DeleteProductForm from '@/features/products/components/DeleteProductForm';
 
+import ProductCard from '@/features/products/components/ProductCard';
+
 type ProductsPageProps = {
   searchParams: Promise<{
     search?: string;
@@ -15,8 +17,7 @@ type ProductsPageProps = {
 const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
   const params = await searchParams;
 
-  const search =
-    typeof params.search === 'string' ? params.search.trim() : '';
+  const search = typeof params.search === 'string' ? params.search.trim() : '';
 
   const sort =
     params.sort === 'price-asc' ||
@@ -26,8 +27,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
       : 'newest';
 
   const availability =
-    params.availability === 'available' ||
-    params.availability === 'sold-out'
+    params.availability === 'available' || params.availability === 'sold-out'
       ? params.availability
       : undefined;
 
@@ -38,7 +38,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
   });
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-6">
+    <main className="mx-auto max-w-7xl space-y-6 px-3 py-6 sm:px-6">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Products</h1>
@@ -151,49 +151,34 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {products.map((product) => (
-            <article
-              key={product.uuid}
-              className="group relative rounded-lg border p-6 transition-colors hover:bg-muted/50"
-            >
-              {product.slug && (
-                <Link
-                  href={`/products/${product.slug}`}
-                  aria-label={`View ${product.name}`}
-                  className="absolute inset-0 z-0 rounded-lg"
-                />
-              )}
+            <div key={product.uuid} className="flex flex-col gap-3">
+              <ProductCard
+                product={{
+                  slug: product.slug,
+                  name: product.name,
+                  priceCents: product.priceCents,
+                  active: product.active,
+                  image: product.images[0] ?? null,
+                }}
+              />
 
-              <div className="pointer-events-none relative z-10 flex items-start justify-between gap-4">
-                <div className="space-y-3">
-                  <h2 className="text-xl font-semibold">{product.name}</h2>
+              {canManage && (
+                <div className="flex flex-wrap items-center gap-3">
+                  {product.slug && (
+                    <Link
+                      href={`/products/${product.slug}/edit`}
+                      className={buttonVariants()}
+                    >
+                      Edit
+                    </Link>
+                  )}
 
-                  <p className="font-medium">
-                    ${(product.priceCents / 100).toFixed(2)}
-                  </p>
-
-                  <p className="text-sm text-muted-foreground">
-                    {product.active ? 'Available' : 'Sold out'}
-                  </p>
+                  <DeleteProductForm productUuid={product.uuid} />
                 </div>
-
-                {canManage && (
-                  <div className="pointer-events-auto relative z-20 flex items-center gap-3">
-                    {product.slug && (
-                      <Link
-                        href={`/products/${product.slug}/edit`}
-                        className={buttonVariants()}
-                      >
-                        Edit
-                      </Link>
-                    )}
-
-                    <DeleteProductForm productUuid={product.uuid} />
-                  </div>
-                )}
-              </div>
-            </article>
+              )}
+            </div>
           ))}
         </div>
       )}

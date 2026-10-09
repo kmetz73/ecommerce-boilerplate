@@ -9,7 +9,10 @@ import {
   type CatalogFilters,
   getNewestCatalogProducts,
 } from '@/features/products/data/products';
-import type { ProductInput } from '@/features/products/validation/product';
+import { parseProductFormData, type ProductInput } from '@/features/products/validation/product';
+import { redirect } from 'next/navigation';
+import { addProductImageToCatalog } from './product-images';
+import { createProduct as createProductService } from '@/features/products/services/products';
 
 export async function getCatalogAccess() {
   const user = await getCurrentDbUser();

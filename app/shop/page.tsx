@@ -2,18 +2,20 @@ import Link from 'next/link';
 
 import { getNewestProducts } from '@/features/products/services/products';
 
+import ProductCard from '@/features/products/components/ProductCard';
+
 const ShopPage = async () => {
   const newestProducts = await getNewestProducts();
 
   return (
-    <main className="mx-auto max-w-6xl space-y-10 p-6">
+    <main className="mx-auto max-w-7xl space-y-8 px-3 py-6 sm:px-6">
       <section className="space-y-6 rounded-xl border p-8">
         <div className="max-w-2xl space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
             Storefront
           </p>
 
-          <h1 className="text-4xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Find your next product
           </h1>
 
@@ -32,7 +34,7 @@ const ShopPage = async () => {
             type="search"
             name="search"
             placeholder="Search products"
-            className="flex-1 rounded-md border px-4 py-3"
+            className="min-w-0 w-full flex-1 rounded-md border px-4 py-3"
           />
 
           <button
@@ -75,25 +77,18 @@ const ShopPage = async () => {
             No products are available yet.
           </p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {newestProducts.map((product) => (
-              <Link
+              <ProductCard
                 key={product.uuid}
-                href={`/products/${product.slug}`}
-                className="space-y-3 rounded-lg border p-5 transition hover:bg-muted/50"
-              >
-                <div>
-                  <h3 className="font-semibold">{product.name}</h3>
-
-                  <p className="text-sm text-muted-foreground">
-                    {product.active ? 'Available' : 'Sold out'}
-                  </p>
-                </div>
-
-                <p className="text-lg font-semibold">
-                  ${(product.priceCents / 100).toFixed(2)}
-                </p>
-              </Link>
+                product={{
+                  slug: product.slug,
+                  name: product.name,
+                  priceCents: product.priceCents,
+                  active: product.active,
+                  image: product.images[0] ?? null,
+                }}
+              />
             ))}
           </div>
         )}

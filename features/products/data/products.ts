@@ -40,6 +40,17 @@ export async function getCatalogProducts(filters: CatalogFilters = {}) {
           : sort === 'name'
             ? { name: 'asc' }
             : { createdAt: 'desc' },
+    // NEW: Retrieve the first image for each product.
+    include: {
+      images: {
+        take: 1,
+        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+        select: {
+          id: true,
+          altText: true,
+        },
+      },
+    },
   });
 }
 
@@ -71,6 +82,18 @@ export async function getNewestCatalogProducts(limit = 4) {
       createdAt: 'desc',
     },
     take: limit,
+
+    // Retrieve the primary image for each product.
+    include: {
+      images: {
+        take: 1,
+        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+        select: {
+          id: true,
+          altText: true,
+        },
+      },
+    },
   });
 }
 

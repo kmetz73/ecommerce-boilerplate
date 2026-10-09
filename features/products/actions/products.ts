@@ -10,6 +10,8 @@ import {
   updateProduct as updateProductService,
 } from '@/features/products/services/products';
 
+import { addProductImageToCatalog } from '@/features/products/services/product-images';
+
 export type ProductActionState = {
   success: false;
   message: string;
@@ -38,12 +40,51 @@ function refreshCatalog() {
   revalidatePath('/products', 'layout');
 }
 
-
-
 export async function createProduct(formData: FormData) {
   await requireAdmin();
-  await createProductService(parseProductFormData(formData));
+
+  // Validate product information.
+  const input = parseProductFormData(formData);
+
+  // The initial image is optional.
+  const file = formData.get('image');
+  const image = file instanceof File && file.size > 0 ? file : null;
+
+  // Check the file before creating the product.
+  if (
+    image &&
+    (image.size > 5 * 1024 * 1024 ||
+      !['image/jpeg', 'image/png', 'image/webp'].includes(image.type))
+  ) {
+    throw new Error('Image must be JPG, PNG, or WebP and 5 MB or smaller.');
+  }
+
+  // Create the product and retrieve its UUID.
+  const product = await createProductService(input);
+
+  let imageUploadFailed = false;
+
+  // Upload the first product image if one was provided.
+  if (image) {
+    try {
+      await addProductImageToCatalog({
+        productUuid: product.uuid,
+        altText: `${product.name} product photo`,
+        file: image,
+      });
+    } catch (error) {
+      console.error('Initial product image upload failed:', error);
+      imageUploadFailed = true;
+    }
+  }
+
   refreshCatalog();
+
+  // Product was created, but the image failed.
+  if (imageUploadFailed) {
+    redirect(`/products/${product.slug}/edit?imageUpload=failed`);
+  }
+
   redirect('/products');
 }
 
@@ -54,7 +95,8 @@ export async function updateProduct(
   await requireAdmin();
   const productUuid = parseProductUuid(formData);
   const result = await updateProductService({
-    ...parseProductFormData(formData), productUuid,
+    ...parseProductFormData(formData),
+    productUuid,
   });
   if (!result.success) return result;
   refreshCatalog();
