@@ -34,7 +34,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             alt={product.image.altText}
             width={480}
             height={480}
-            unoptimized
+            sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
             className="aspect-square w-full object-contain p-3 transition-transform duration-200 group-hover:scale-[1.03]"
           />
         ) : (

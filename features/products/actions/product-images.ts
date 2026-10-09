@@ -1,5 +1,5 @@
 'use server';
-import prisma from "@/lib/prisma";
+import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
@@ -71,11 +71,20 @@ export async function uploadProductImageAction(
       message: 'Product image uploaded successfully!',
     };
   } catch (error) {
-    console.error('Product image upload failed:', error);
+    const isImageFormatError =
+      error instanceof Error &&
+      error.message.startsWith('Invalid image format.');
+
+    // Log unexpected errors, not normal image validation failures.
+    if (!isImageFormatError) {
+      console.error('Product image upload failed:', error);
+    }
 
     return {
       status: 'error',
-      message: 'Unable to upload image. Please try again.',
+      message: isImageFormatError
+        ? error.message
+        : 'Unable to upload image. Please try again.',
     };
   }
 }

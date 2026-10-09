@@ -35,8 +35,8 @@ const ProductGallery = ({ images }: ProductGalleryProps) => {
           alt={selectedImage.altText}
           width={900}
           height={900}
-          unoptimized
           className="aspect-square w-full object-contain"
+          sizes="(max-width: 640px) 100vw, 448px"
         />
       </div>
 
@@ -65,7 +65,7 @@ const ProductGallery = ({ images }: ProductGalleryProps) => {
                   alt={image.altText}
                   width={160}
                   height={160}
-                  unoptimized
+                  sizes="(max-width: 448px) 25vw, 104px"
                   className="aspect-square w-full object-cover"
                 />
               </button>
