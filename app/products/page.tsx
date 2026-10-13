@@ -159,8 +159,10 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
                   slug: product.slug,
                   name: product.name,
                   priceCents: product.priceCents,
+                  salePriceCents: product.salePriceCents,
                   active: product.active,
                   image: product.images[0] ?? null,
+                  variants: product.variants,
                 }}
               />
 

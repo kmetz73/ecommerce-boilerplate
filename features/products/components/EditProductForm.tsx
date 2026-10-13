@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
+import PriceInput from './PriceInput';
 
 import { updateProduct } from '@/features/products/actions/products';
 import SubmitButton from '@/components/SubmitButton';
@@ -11,68 +12,133 @@ type EditProductFormProps = {
     name: string;
     description: string | null;
     priceCents: number;
+    salePriceCents: number | null;
   };
 };
 
 const EditProductForm = ({ product }: EditProductFormProps) => {
   const [state, formAction] = useActionState(updateProduct, null);
 
+  const [name, setName] = useState(product.name);
+  const [description, setDescription] = useState(product.description ?? '');
+
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-5">
+      {/* Product UUID */}
       <input type="hidden" name="productUuid" value={product.uuid} />
 
+      {/* Product name */}
       <div className="space-y-2">
-        <label htmlFor="name" className="text-sm font-medium">
-          Product name
+        <label htmlFor="name" className="block text-sm font-medium">
+          Product Name
         </label>
 
         <input
           id="name"
           name="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
           type="text"
-          defaultValue={product.name}
+          maxLength={100}
           required
-          className="w-full rounded-md border px-3 py-2"
+          className="w-full rounded-md border bg-background px-3 py-2"
         />
       </div>
 
+      {/* Product description */}
       <div className="space-y-2">
-        <label htmlFor="description" className="text-sm font-medium">
+        <label htmlFor="description" className="block text-sm font-medium">
           Description
         </label>
 
         <textarea
           id="description"
           name="description"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
           rows={4}
-          defaultValue={product.description ?? ''}
-          className="w-full rounded-md border px-3 py-2"
+          maxLength={1000}
+          className="w-full rounded-md border bg-background px-3 py-2"
         />
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="priceCents" className="text-sm font-medium">
-          Price in cents
-        </label>
+      {/* Product pricing */}
+      <div className="space-y-4 rounded-xl border p-4">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">Product Pricing</h3>
 
-        <input
-          id="priceCents"
-          name="priceCents"
-          type="number"
-          min="0"
-          defaultValue={product.priceCents}
-          required
-          className="w-full rounded-md border px-3 py-2"
-        />
+          <p className="text-sm text-muted-foreground">
+            Enter prices in dollars, not cents.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Regular price */}
+          <div className="space-y-2">
+            <label htmlFor="priceDollars" className="block text-sm font-medium">
+              Regular Price ($)
+            </label>
+
+            <PriceInput
+              id="priceDollars"
+              name="priceDollars"
+              type="text"
+              inputMode="decimal"
+              defaultValue={(product.priceCents / 100).toFixed(2)}
+              placeholder="49.99"
+              required
+              className="w-full rounded-md border bg-background px-3 py-2"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Example: enter 49.99 for $49.99.
+            </p>
+          </div>
+
+          {/* Optional sale price */}
+          <div className="space-y-2">
+            <label
+              htmlFor="salePriceDollars"
+              className="block text-sm font-medium"
+            >
+              Sale Price ($) — Optional
+            </label>
+
+            <PriceInput
+              id="salePriceDollars"
+              name="salePriceDollars"
+              type="text"
+              inputMode="decimal"
+              defaultValue={
+                product.salePriceCents === null
+                  ? ''
+                  : (product.salePriceCents / 100).toFixed(2)
+              }
+              placeholder="Leave blank if not on sale"
+              className="w-full rounded-md border bg-background px-3 py-2"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Must be lower than the regular price. Clear this field to remove
+              the sale.
+            </p>
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          All variants inherit the product regular and sale prices.
+        </p>
       </div>
 
+      {/* Server action feedback */}
       {state?.message && (
         <p role="alert" className="text-sm text-destructive">
           {state.message}
         </p>
       )}
 
-      <SubmitButton pendingText="saving...">Save Changes</SubmitButton>
+      {/* Save changes */}
+      <SubmitButton pendingText="Saving...">Save Product Changes</SubmitButton>
     </form>
   );
 };

@@ -1,9 +1,22 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import ProductPrice from '@/features/products/components/ProductPrice';
+
+import { getCatalogPricing } from '@/features/products/lib/catalog-pricing';
+
+
 type ProductCardImage = {
   id: string;
   altText: string;
+};
+
+type ProductCardVariant = {
+  optionValues: unknown;
+  priceCents: number | null;
+  salePriceCents: number | null;
+  stockQuantity: number;
+  active: boolean;
 };
 
 type ProductCardProps = {
@@ -11,18 +24,25 @@ type ProductCardProps = {
     slug: string;
     name: string;
     priceCents: number;
+    salePriceCents?: number | null;
     active: boolean;
     image?: ProductCardImage | null;
+    variants?: ProductCardVariant[];
   };
 };
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
-
 const ProductCard = ({ product }: ProductCardProps) => {
   const productUrl = `/products/${product.slug}`;
+
+  // Calculate pricing and availability using the shared catalog rules.
+  const pricing = getCatalogPricing(
+    {
+      priceCents: product.priceCents,
+      salePriceCents: product.salePriceCents ?? null,
+      active: product.active,
+    },
+    product.variants ?? []
+  );
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
@@ -53,12 +73,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {product.name}
         </Link>
 
-        <p className="text-base font-bold sm:text-lg">
-          {currencyFormatter.format(product.priceCents / 100)}
-        </p>
+        {/* Product pricing */}
+        <div className="space-y-1">
+          <ProductPrice
+            priceCents={pricing.priceCents}
+            salePriceCents={pricing.salePriceCents}
+            size="card"
+          />
+        </div>
 
+        {/* Availability reflects active variants and stock */}
         <p className="mt-auto text-sm text-muted-foreground">
-          {product.active ? 'Available' : 'Sold out'}
+          {pricing.isAvailable ? 'Available' : 'Sold out'}
         </p>
       </div>
     </article>

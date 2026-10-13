@@ -7,12 +7,12 @@ import {
 } from './product';
 
 describe('productSchema', () => {
-  it('rejects missing, blank, fractional, and overflowing form prices', () => {
-    for (const price of [null, '', ' ', '1.5', '2147483648']) {
+  it('rejects missing, blank, overprecise, and overflowing dollar prices', () => {
+    for (const price of [null, '', ' ', '1.555', '21474836.48']) {
       const form = new FormData();
       form.set('name', 'Product');
-      if (price !== null) form.set('priceCents', price);
-      expect(() => parseProductFormData(form)).toThrow('Invalid product data');
+      if (price !== null) form.set('priceDollars', price);
+      expect(() => parseProductFormData(form)).toThrow();
     }
   });
   it('accepts a valid product', () => {
@@ -54,7 +54,7 @@ describe('productSchema', () => {
 
     formData.set('name', 'Storm Phaze II');
     formData.set('description', 'Reactive bowling ball');
-    formData.set('priceCents', '15999');
+    formData.set('priceDollars', '159.99');
 
     const result = parseProductFormData(formData);
 
@@ -70,10 +70,10 @@ describe('productSchema', () => {
 
     formData.set('name', '');
     formData.set('description', 'Invalid product');
-    formData.set('priceCents', '15999');
+    formData.set('priceDollars', '159.99');
 
     expect(() => parseProductFormData(formData)).toThrow(
-      'Invalid product data'
+      'Product name is required'
     );
   });
 });

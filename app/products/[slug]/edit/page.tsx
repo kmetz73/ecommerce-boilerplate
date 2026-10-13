@@ -1,12 +1,16 @@
 import { notFound } from 'next/navigation';
 
 import UploadProductImageForm from '@/features/products/components/UploadProductImageForm';
+
 import EditProductForm from '@/features/products/components/EditProductForm';
+
 import ProductImageManager from '@/features/products/components/ProductImageManager';
 
 import { getPublicCatalogProductBySlug } from '@/features/products/services/products';
 import { getProductImages } from '@/features/products/data/product-images';
 import { requireAdminPage } from '@/lib/auth/require-admin-page';
+import CreateProductVariantForm from '@/features/products/components/CreateProductVariantForm';
+import ProductVariantList from '@/features/products/components/ProductVariantList';
 
 type EditProductPageProps = {
   params: Promise<{
@@ -89,6 +93,16 @@ const EditProductPage = async ({
           <ProductImageManager productUuid={product.uuid} images={images} />
         </div>
       </div>
+
+      {/* Display existing variants */}
+      <ProductVariantList
+        productUuid={product.uuid}
+        basePriceCents={product.priceCents}
+        baseSalePriceCents={product.salePriceCents}
+      />
+
+      {/* Create new variants */}
+      <CreateProductVariantForm productUuid={product.uuid} />
     </main>
   );
 };

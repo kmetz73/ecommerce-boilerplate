@@ -2,13 +2,16 @@ generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
+
 datasource db {
   provider = "postgresql"
 }
+
 enum Role {
   USER
   ADMIN
 }
+
 model User {
   id       Int       @id @default(autoincrement())
   clerkId  String    @unique @map("clerk_id")
@@ -16,21 +19,26 @@ model User {
   email    String    @unique
   role     Role      @default(USER)
   products Product[]
+
   @@map("users")
 }
+
 model Product {
-  uuid        String   @id @default(uuid()) @db.Uuid
-  slug        String   @unique
-  name        String
-  description String?
-  priceCents  Int      @map("price_cents")
-  active      Boolean  @default(true)
-  ownerId     Int      @map("owner_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  uuid           String           @id @default(uuid()) @db.Uuid
+  slug           String           @unique
+  name           String
+  description    String?
+  priceCents     Int              @map("price_cents")
+  salePriceCents Int?             @map("sale_price_cents")
+  active         Boolean          @default(true)
+  ownerId        Int              @map("owner_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  owner          User             @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  images         ProductImage[]
+  variants       ProductVariant[]
+
   @@map("products")
-  images ProductImage[]
 }
 
 model ProductImage {
@@ -45,4 +53,22 @@ model ProductImage {
 
   @@index([productUuid, sortOrder])
   @@map("product_images")
+}
+
+model ProductVariant {
+  uuid           String   @id @default(uuid()) @db.Uuid
+  productUuid    String   @map("product_uuid") @db.Uuid
+  sku            String   @unique
+  optionValues   Json     @map("option_values")
+  priceCents     Int?     @map("price_cents")
+  salePriceCents Int?     @map("sale_price_cents")
+  stockQuantity  Int      @default(0) @map("stock_quantity")
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
+
+  @@index([productUuid])
+  @@map("product_variants")
 }

@@ -68,18 +68,12 @@ export async function uploadProductImage(productUuid: string, file: File) {
       (type) => hasValidImageSignature(bytes, type)
     );
 
-    const actualFormat = detectedType
-      ? detectedType.split('/')[1].toUpperCase()
-      : 'UNKNOWN';
-
-    const declaredFormat = file.type.split('/')[1].toUpperCase();
-
-    throw new Error(
-      `Invalid image format. Your file is actually ${actualFormat}, ` +
-        `but was identified as ${declaredFormat}. ` +
-        `Please convert the image to a supported format and try again.`
-    );
-  }0
+    if (!detectedType) {
+      throw new Error(
+        'Invalid image format. Only genuine JPG, PNG, and WebP images are supported.'
+      );
+    }
+  }
 
   // 4. Process image with Sharp.
   let optimizedBytes: Buffer;

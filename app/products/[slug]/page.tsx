@@ -1,17 +1,20 @@
 import { notFound } from 'next/navigation';
+import { getCatalogPricing } from '@/features/products/lib/catalog-pricing';
 
 import { getPublicCatalogProductBySlug } from '@/features/products/services/products';
+import { getProductImages } from '@/features/products/data/product-images';
+import { getProductVariants } from '@/features/products/data/product-variants';
+import { productVariantSchema } from '@/features/products/validation/product-variants';
 
 import ProductGallery from '@/features/products/components/ProductGallery';
-import { getProductImages } from '@/features/products/data/product-images';
+import ProductVariantSelector from '@/features/products/components/ProductVariantSelector';
+import ProductPrice from '@/features/products/components/ProductPrice';
 
 type ProductPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
-
-
 
 const ProductPage = async ({ params }: ProductPageProps) => {
   const { slug } = await params;
@@ -22,15 +25,41 @@ const ProductPage = async ({ params }: ProductPageProps) => {
     notFound();
   }
 
-  const images = await getProductImages(product.uuid);
+  const [images, allVariants] = await Promise.all([
+    getProductImages(product.uuid),
+    getProductVariants(product.uuid),
+  ]);
+
+  // Only expose active variants with valid options.
+  const variants = allVariants
+    .filter((variant) => variant.active)
+    .flatMap((variant) => {
+      const parsed = productVariantSchema.shape.optionValues.safeParse(
+        variant.optionValues
+      );
+
+      if (!parsed.success) {
+        return [];
+      }
+
+      return [
+        {
+          uuid: variant.uuid,
+          optionValues: parsed.data,
+          priceCents: variant.priceCents,
+          salePriceCents: variant.salePriceCents,
+          stockQuantity: variant.stockQuantity,
+        },
+      ];
+    });
+
+  const hasVariants = allVariants.length > 0;
+
+  const { isAvailable } = getCatalogPricing(product, allVariants);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {product.active ? 'Available' : 'Sold out'}
-        </p>
-
+    <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+      <div className="grid items-start gap-8 md:grid-cols-2">
         <ProductGallery
           images={images.map((image) => ({
             id: image.id,
@@ -38,17 +67,32 @@ const ProductPage = async ({ params }: ProductPageProps) => {
           }))}
         />
 
-        <h1 className="text-4xl font-bold">{product.name}</h1>
-
-        <p className="text-2xl font-semibold">
-          ${(product.priceCents / 100).toFixed(2)}
-        </p>
-
-        {product.description && (
-          <p className="max-w-2xl text-muted-foreground">
-            {product.description}
+        <div className="min-w-0 space-y-5">
+          <p className="text-sm text-muted-foreground">
+            {isAvailable ? 'Available' : 'Sold out'}
           </p>
-        )}
+
+          <h1 className="text-3xl font-bold sm:text-4xl">{product.name}</h1>
+
+          {product.description && (
+            <p className="text-muted-foreground">{product.description}</p>
+          )}
+
+          {hasVariants ? (
+            <ProductVariantSelector
+              variants={variants}
+              basePriceCents={product.priceCents}
+              baseSalePriceCents={product.salePriceCents}
+              productActive={product.active}
+            />
+          ) : (
+            <ProductPrice
+              priceCents={product.priceCents}
+              salePriceCents={product.salePriceCents}
+              size="detail"
+            />
+          )}
+        </div>
       </div>
     </main>
   );

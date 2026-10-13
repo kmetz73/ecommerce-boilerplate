@@ -3,7 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth/require-admin';
-import { parseProductFormData } from '@/features/products/validation/product';
+import {
+  parseProductFormData,
+  ProductFormValidationError,
+} from '@/features/products/validation/product';
 import {
   createProduct as createProductService,
   deleteProduct as deleteProductService,
@@ -40,11 +43,22 @@ function refreshCatalog() {
   revalidatePath('/products', 'layout');
 }
 
-export async function createProduct(formData: FormData) {
+export async function createProduct(
+  _previousState: ProductActionState,
+  formData: FormData
+): Promise<ProductActionState> {
   await requireAdmin();
 
   // Validate product information.
-  const input = parseProductFormData(formData);
+  let input;
+  try {
+    input = parseProductFormData(formData, false);
+  } catch (error) {
+    if (error instanceof ProductFormValidationError) {
+      return { success: false, message: error.message };
+    }
+    throw error;
+  }
 
   // The initial image is optional.
   const file = formData.get('image');
@@ -56,7 +70,10 @@ export async function createProduct(formData: FormData) {
     (image.size > 5 * 1024 * 1024 ||
       !['image/jpeg', 'image/png', 'image/webp'].includes(image.type))
   ) {
-    throw new Error('Image must be JPG, PNG, or WebP and 5 MB or smaller.');
+    return {
+      success: false,
+      message: 'Image must be JPG, PNG, or WebP and 5 MB or smaller.',
+    };
   }
 
   // Create the product and retrieve its UUID.
@@ -94,8 +111,17 @@ export async function updateProduct(
 ): Promise<ProductActionState> {
   await requireAdmin();
   const productUuid = parseProductUuid(formData);
+  let input;
+  try {
+    input = parseProductFormData(formData);
+  } catch (error) {
+    if (error instanceof ProductFormValidationError) {
+      return { success: false, message: error.message };
+    }
+    throw error;
+  }
   const result = await updateProductService({
-    ...parseProductFormData(formData),
+    ...input,
     productUuid,
   });
   if (!result.success) return result;

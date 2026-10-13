@@ -1,10 +1,19 @@
+import { getCatalogPricing } from '../lib/catalog-pricing';
 import prisma from '@/lib/prisma';
+
 import type { ProductInput } from '@/features/products/validation/product';
 
+export type CatalogFilters = {
+  search?: string;
+  sort?: 'newest' | 'price-asc' | 'price-desc' | 'name';
+  availability?: 'available' | 'sold-out';
+};
+
+// Retrieve products for the catalog page.
 export async function getCatalogProducts(filters: CatalogFilters = {}) {
   const { search, sort = 'newest', availability } = filters;
 
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where: {
       ...(search
         ? {
@@ -24,24 +33,12 @@ export async function getCatalogProducts(filters: CatalogFilters = {}) {
             ],
           }
         : {}),
-
-      ...(availability === 'available'
-        ? { active: true }
-        : availability === 'sold-out'
-          ? { active: false }
-          : {}),
     },
 
-    orderBy:
-      sort === 'price-asc'
-        ? { priceCents: 'asc' }
-        : sort === 'price-desc'
-          ? { priceCents: 'desc' }
-          : sort === 'name'
-            ? { name: 'asc' }
-            : { createdAt: 'desc' },
-    // NEW: Retrieve the first image for each product.
+    orderBy: sort === 'name' ? { name: 'asc' } : { createdAt: 'desc' },
+
     include: {
+      // Primary product image.
       images: {
         take: 1,
         orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
@@ -50,12 +47,37 @@ export async function getCatalogProducts(filters: CatalogFilters = {}) {
           altText: true,
         },
       },
+
+      // Variant information for catalog pricing.
+      variants: {
+        select: {
+          optionValues: true,
+          priceCents: true,
+          salePriceCents: true,
+          stockQuantity: true,
+          active: true,
+        },
+      },
     },
   });
+  // All matching products are already loaded; sort/filter their displayed values.
+  const summaries = products.map((product) => ({
+    product,
+    pricing: getCatalogPricing(product, product.variants),
+  }));
+  const eligible = summaries.filter(({ pricing }) =>
+    !availability || pricing.isAvailable === (availability === 'available')
+  );
+  if (sort === 'price-asc' || sort === 'price-desc') {
+    const direction = sort === 'price-asc' ? 1 : -1;
+    eligible.sort((a, b) =>
+      (a.pricing.displayPriceCents - b.pricing.displayPriceCents) * direction
+    );
+  }
+  return eligible.map(({ product }) => product);
 }
 
-
-
+// Look up a product by UUID.
 export async function getCatalogProductByUuid(productUuid: string) {
   return prisma.product.findUnique({
     where: {
@@ -64,26 +86,22 @@ export async function getCatalogProductByUuid(productUuid: string) {
   });
 }
 
+// Look up a public product by slug.
 export async function getCatalogProductBySlug(slug: string) {
   return prisma.product.findUnique({
     where: { slug },
   });
 }
 
-export type CatalogFilters = {
-  search?: string;
-  sort?: 'newest' | 'price-asc' | 'price-desc' | 'name';
-  availability?: 'available' | 'sold-out';
-};
-
+// Retrieve newest products for the shop homepage.
 export async function getNewestCatalogProducts(limit = 4) {
   return prisma.product.findMany({
     orderBy: {
       createdAt: 'desc',
     },
+
     take: limit,
 
-    // Retrieve the primary image for each product.
     include: {
       images: {
         take: 1,
@@ -93,31 +111,59 @@ export async function getNewestCatalogProducts(limit = 4) {
           altText: true,
         },
       },
+
+      variants: {
+        select: {
+          optionValues: true,
+          priceCents: true,
+          salePriceCents: true,
+          stockQuantity: true,
+          active: true,
+        },
+      },
     },
   });
 }
 
-export async function createCatalogProduct(input: ProductInput & { createdById: number; slug: string }) {
+// Create a product.
+export async function createCatalogProduct(
+  input: ProductInput & {
+    createdById: number;
+    slug: string;
+  }
+) {
   const { createdById, slug, ...product } = input;
+
   return prisma.product.create({
-    // Retain the existing relation as creator attribution, not an access filter.
-    data: { ...product, ownerId: createdById, slug },
+    data: {
+      ...product,
+      ownerId: createdById,
+      slug,
+    },
   });
 }
 
+// Update a product by UUID.
 export async function updateCatalogProduct(
-  input: ProductInput & { productUuid: string }
+  input: ProductInput & {
+    productUuid: string;
+  }
 ) {
   const { productUuid, ...data } = input;
 
   return prisma.product.updateMany({
-    where: { uuid: productUuid },
+    where: {
+      uuid: productUuid,
+    },
     data,
   });
 }
 
+// Delete a product by UUID.
 export async function deleteCatalogProduct(productUuid: string) {
   return prisma.product.deleteMany({
-    where: { uuid: productUuid },
+    where: {
+      uuid: productUuid,
+    },
   });
 }
