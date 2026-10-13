@@ -11,6 +11,9 @@
   - api/
     - health/
       - route.ts
+    - product-images/
+      - [imageId]/
+        - route.ts
     - ready/
       - route.ts
   - products/
@@ -61,18 +64,50 @@
       - admin-products.ts
   - products/
     - actions/
+      - product-images.ts
+      - product-variants.test.ts
+      - product-variants.ts
       - products.test.ts
       - products.ts
     - components/
+      - CreateProductForm.tsx
+      - CreateProductVariantForm.tsx
       - DeleteProductForm.tsx
+      - DeleteProductImageForm.tsx
+      - DeleteProductVariantForm.tsx
       - EditProductForm.tsx
+      - EditProductVariantForm.tsx
+      - PriceInput.tsx
+      - ProductCard.tsx
+      - ProductGallery.tsx
+      - ProductImageManager.tsx
+      - ProductPrice.tsx
+      - ProductVariantList.tsx
+      - ProductVariantSelector.tsx
+      - UploadProductImageForm.tsx
     - data/
+      - product-images.ts
+      - product-variants.test.ts
+      - product-variants.ts
       - products.test.ts
       - products.ts
+    - lib/
+      - catalog-pricing.test.ts
+      - catalog-pricing.ts
+      - money.test.ts
+      - money.ts
+      - resolve-price.test.ts
+      - resolve-price.ts
     - services/
+      - product-images.test.ts
+      - product-images.ts
+      - product-variants.test.ts
+      - product-variants.ts
       - products.test.ts
       - products.ts
     - validation/
+      - pricing.ts
+      - product-variants.ts
       - product.test.ts
       - product.ts
 - lib/
@@ -80,6 +115,10 @@
     - current-user.ts
     - require-admin-page.ts
     - require-admin.ts
+  - storage/
+    - product-images.integration.test.ts
+    - product-images.ts
+    - s3.ts
   - env.ts
   - logger.ts
   - prisma.ts
@@ -87,6 +126,14 @@
 - prisma/
   - migrations/
     - 20261007000000_commerce_v1/
+      - migration.sql
+    - 20261008163443_add_product_images/
+      - migration.sql
+    - 20261008163930_add_product_images/
+      - migration.sql
+    - 20261010010808_add_product_variants/
+      - migration.sql
+    - 20261010210242_add_sale_pricing/
       - migration.sql
     - migration_lock.toml
   - schema.prisma
