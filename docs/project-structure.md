@@ -7,6 +7,8 @@
 
 - app/
   - admin/
+    - reviews/
+      - page.tsx
     - page.tsx
   - api/
     - health/
@@ -110,6 +112,35 @@
       - product-variants.ts
       - product.test.ts
       - product.ts
+  - reviews/
+    - actions/
+      - moderation.test.ts
+      - moderation.ts
+      - reviews.test.ts
+      - reviews.ts
+    - components/
+      - ProductReviews.tsx
+      - ReviewForm.tsx
+      - ReviewManagement.tsx
+      - ReviewModerationForm.tsx
+      - StarRatingDisplay.tsx
+      - StarRatingInput.tsx
+    - data/
+      - moderation.test.ts
+      - moderation.ts
+      - rating-summaries.test.ts
+      - rating-summaries.ts
+      - reviews.test.ts
+      - reviews.ts
+    - services/
+      - moderation.test.ts
+      - moderation.ts
+      - rating-summaries.ts
+      - reviews.test.ts
+      - reviews.ts
+    - validation/
+      - review.test.ts
+      - review.ts
 - lib/
   - auth/
     - current-user.ts
@@ -134,6 +165,10 @@
     - 20261010010808_add_product_variants/
       - migration.sql
     - 20261010210242_add_sale_pricing/
+      - migration.sql
+    - 20261014143604_add_product_reviews/
+      - migration.sql
+    - 20261014151922_fractional_review_ratings/
       - migration.sql
     - migration_lock.toml
   - schema.prisma

@@ -12,6 +12,11 @@ enum Role {
   ADMIN
 }
 
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+}
+
 model User {
   id       Int       @id @default(autoincrement())
   clerkId  String    @unique @map("clerk_id")
@@ -19,6 +24,7 @@ model User {
   email    String    @unique
   role     Role      @default(USER)
   products Product[]
+  reviews  Review[]
 
   @@map("users")
 }
@@ -37,6 +43,7 @@ model Product {
   owner          User             @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   images         ProductImage[]
   variants       ProductVariant[]
+  reviews        Review[]
 
   @@map("products")
 }
@@ -71,4 +78,23 @@ model ProductVariant {
 
   @@index([productUuid])
   @@map("product_variants")
+}
+
+model Review {
+  uuid        String       @id @default(uuid()) @db.Uuid
+  productUuid String       @map("product_uuid") @db.Uuid
+  userId      Int          @map("user_id")
+  rating      Decimal      @db.Decimal(3, 2)
+  body        String?
+  status      ReviewStatus @default(PUBLISHED)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productUuid, userId])
+  @@index([productUuid, status])
+  @@map("reviews")
 }

@@ -9,6 +9,7 @@ import { productVariantSchema } from '@/features/products/validation/product-var
 import ProductGallery from '@/features/products/components/ProductGallery';
 import ProductVariantSelector from '@/features/products/components/ProductVariantSelector';
 import ProductPrice from '@/features/products/components/ProductPrice';
+import ProductReviews from '@/features/reviews/components/ProductReviews';
 
 type ProductPageProps = {
   params: Promise<{
@@ -66,6 +67,7 @@ const ProductPage = async ({ params }: ProductPageProps) => {
             altText: image.altText,
           }))}
         />
+        <ProductReviews productUuid={product.uuid} />
 
         <div className="min-w-0 space-y-5">
           <p className="text-sm text-muted-foreground">

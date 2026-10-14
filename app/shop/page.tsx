@@ -4,8 +4,16 @@ import { getNewestProducts } from '@/features/products/services/products';
 
 import ProductCard from '@/features/products/components/ProductCard';
 
+import { getRatingSummariesForProducts } from '@/features/reviews/services/rating-summaries';
+
 const ShopPage = async () => {
+  // 1. Retrieve the newest products.
   const newestProducts = await getNewestProducts();
+
+  // 2. Retrieve their average ratings and review counts.
+  const ratingsByProduct = await getRatingSummariesForProducts(
+    newestProducts.map((product) => product.uuid)
+  );
 
   return (
     <main className="mx-auto max-w-7xl space-y-8 px-3 py-6 sm:px-6">
@@ -81,6 +89,7 @@ const ShopPage = async () => {
             {newestProducts.map((product) => (
               <ProductCard
                 key={product.uuid}
+                rating={ratingsByProduct.get(product.uuid) ?? null}
                 product={{
                   slug: product.slug,
                   name: product.name,

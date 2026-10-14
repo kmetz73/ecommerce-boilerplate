@@ -5,6 +5,9 @@ import ProductPrice from '@/features/products/components/ProductPrice';
 
 import { getCatalogPricing } from '@/features/products/lib/catalog-pricing';
 
+import StarRatingDisplay from '@/features/reviews/components/StarRatingDisplay';
+
+import type { ProductRatingSummary } from '@/features/reviews/data/rating-summaries';
 
 type ProductCardImage = {
   id: string;
@@ -29,12 +32,14 @@ type ProductCardProps = {
     image?: ProductCardImage | null;
     variants?: ProductCardVariant[];
   };
+
+  rating?: ProductRatingSummary | null;
 };
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, rating }: ProductCardProps) => {
   const productUrl = `/products/${product.slug}`;
 
-  // Calculate pricing and availability using the shared catalog rules.
+  // Use our existing product pricing rules.
   const pricing = getCatalogPricing(
     {
       priceCents: product.priceCents,
@@ -82,7 +87,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
           />
         </div>
 
-        {/* Availability reflects active variants and stock */}
+        {/* Average published customer rating */}
+        {rating && rating.reviewCount > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <StarRatingDisplay rating={rating.averageRating} />
+
+            <span className="text-xs text-muted-foreground">
+              ({rating.reviewCount})
+            </span>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">No reviews yet</p>
+        )}
+
+        {/* Availability */}
         <p className="mt-auto text-sm text-muted-foreground">
           {pricing.isAvailable ? 'Available' : 'Sold out'}
         </p>
@@ -92,3 +110,4 @@ const ProductCard = ({ product }: ProductCardProps) => {
 };
 
 export default ProductCard;
+  

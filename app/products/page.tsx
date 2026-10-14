@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
-
 import { getCatalogForViewer } from '@/features/products/services/products';
+import { getRatingSummariesForProducts } from '@/features/reviews/services/rating-summaries';
 import DeleteProductForm from '@/features/products/components/DeleteProductForm';
-
 import ProductCard from '@/features/products/components/ProductCard';
 
 type ProductsPageProps = {
@@ -36,6 +35,10 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
     sort,
     availability,
   });
+
+  const ratingsByProduct = await getRatingSummariesForProducts(
+    products.map((product) => product.uuid)
+  );
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-3 py-6 sm:px-6">
@@ -155,6 +158,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
           {products.map((product) => (
             <div key={product.uuid} className="flex flex-col gap-3">
               <ProductCard
+                rating={ratingsByProduct.get(product.uuid) ?? null}
                 product={{
                   slug: product.slug,
                   name: product.name,
