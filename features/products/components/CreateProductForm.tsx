@@ -9,6 +9,8 @@ const CreateProductForm = () => {
   const [state, formAction] = useActionState(createProduct, null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [trackInventory, setTrackInventory] = useState(false);
+  const [stockQuantity, setStockQuantity] = useState('0');
 
   return (
     <form action={formAction} className="space-y-5">
@@ -85,6 +87,67 @@ const CreateProductForm = () => {
           editing the product.
         </p>
       </div>
+
+      {/* Product inventory */}
+      <section className="space-y-4 rounded-xl border p-4">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">Product Inventory</h3>
+
+          <p className="text-sm text-muted-foreground">
+            Track inventory for products without variants. Products with
+            variants use their own stock quantities.
+          </p>
+        </div>
+
+        <input type="hidden" name="inventoryConfigured" value="true" />
+
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            name="trackInventory"
+            value="on"
+            checked={trackInventory}
+            onChange={(event) => setTrackInventory(event.target.checked)}
+            className="size-4 accent-primary"
+          />
+
+          <span className="font-medium">Track Inventory</span>
+        </label>
+
+        {trackInventory ? (
+          <div className="space-y-2">
+            <label
+              htmlFor="product-stock"
+              className="block text-sm font-medium"
+            >
+              Stock Quantity
+            </label>
+
+            <input
+              id="product-stock"
+              name="stockQuantity"
+              type="number"
+              min={0}
+              max={2147483647}
+              step={1}
+              inputMode="numeric"
+              value={stockQuantity}
+              onChange={(event) => setStockQuantity(event.target.value)}
+              required
+              className="w-full rounded-md border bg-background px-3 py-2"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Set to 0 to mark this product sold out automatically.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Inventory is not tracked. This product can be purchased while
+            active.
+          </p>
+        )}
+      </section>
 
       {/* Optional primary image */}
       <div className="space-y-2">

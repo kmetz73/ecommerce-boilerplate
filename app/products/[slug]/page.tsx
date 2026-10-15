@@ -10,6 +10,8 @@ import ProductGallery from '@/features/products/components/ProductGallery';
 import ProductVariantSelector from '@/features/products/components/ProductVariantSelector';
 import ProductPrice from '@/features/products/components/ProductPrice';
 import ProductReviews from '@/features/reviews/components/ProductReviews';
+import AddToCartButton from '@/features/cart/components/AddToCartButton';
+
 
 type ProductPageProps = {
   params: Promise<{
@@ -82,17 +84,25 @@ const ProductPage = async ({ params }: ProductPageProps) => {
 
           {hasVariants ? (
             <ProductVariantSelector
+              productUuid={product.uuid}
               variants={variants}
               basePriceCents={product.priceCents}
               baseSalePriceCents={product.salePriceCents}
               productActive={product.active}
             />
           ) : (
-            <ProductPrice
-              priceCents={product.priceCents}
-              salePriceCents={product.salePriceCents}
-              size="detail"
-            />
+            <div className="space-y-4">
+              <ProductPrice
+                priceCents={product.priceCents}
+                salePriceCents={product.salePriceCents}
+                size="detail"
+              />
+
+              <AddToCartButton
+                productUuid={product.uuid}
+                disabled={!isAvailable}
+              />
+            </div>
           )}
         </div>
       </div>

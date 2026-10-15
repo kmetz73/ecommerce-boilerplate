@@ -4,6 +4,9 @@ import { useState } from 'react';
 
 import ProductPrice from '@/features/products/components/ProductPrice';
 
+import AddToCartButton from '@/features/cart/components/AddToCartButton';
+
+
 import { resolveVariantPricing } from '@/features/products/lib/resolve-price';
 
 type Variant = {
@@ -15,6 +18,7 @@ type Variant = {
 };
 
 type ProductVariantSelectorProps = {
+  productUuid: string;
   variants: Variant[];
   basePriceCents: number;
   baseSalePriceCents: number | null;
@@ -22,6 +26,7 @@ type ProductVariantSelectorProps = {
 };
 
 const ProductVariantSelector = ({
+  productUuid,
   variants,
   basePriceCents,
   baseSalePriceCents,
@@ -117,6 +122,12 @@ const ProductVariantSelector = ({
           {inStock ? `${selectedVariant.stockQuantity} in stock` : 'Sold out'}
         </p>
       </div>
+
+      <AddToCartButton
+        productUuid={productUuid}
+        variantUuid={selectedVariant.uuid}
+        disabled={!inStock}
+      />
     </section>
   );
 };

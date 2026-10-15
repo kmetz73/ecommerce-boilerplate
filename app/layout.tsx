@@ -5,6 +5,11 @@ import './globals.css';
 
 import ThemeProvider from '@/components/theme-provider';
 
+
+import CartProvider from '@/features/cart/components/CartProvider';
+import CartDrawer from '@/features/cart/components/CartDrawer';
+
+
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
@@ -27,8 +32,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <AppHeader/>
-            {children}
+            <CartProvider>
+              <AppHeader />
+              {children}
+              <CartDrawer/>
+            </CartProvider>
           </ThemeProvider>
         </ClerkProvider>
       </body>

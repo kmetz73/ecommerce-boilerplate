@@ -13,14 +13,25 @@ type EditProductFormProps = {
     description: string | null;
     priceCents: number;
     salePriceCents: number | null;
+    stockQuantity: number | null;
   };
+  hasVariants: boolean;
 };
 
-const EditProductForm = ({ product }: EditProductFormProps) => {
+const EditProductForm = ({ product, hasVariants }: EditProductFormProps) => {
   const [state, formAction] = useActionState(updateProduct, null);
 
   const [name, setName] = useState(product.name);
   const [description, setDescription] = useState(product.description ?? '');
+
+const [trackInventory, setTrackInventory] = useState(
+  product.stockQuantity !== null
+);
+
+const [stockQuantity, setStockQuantity] = useState(
+  String(product.stockQuantity ?? 0)
+);
+
 
   return (
     <form action={formAction} className="space-y-5">
@@ -129,6 +140,73 @@ const EditProductForm = ({ product }: EditProductFormProps) => {
           All variants inherit the product regular and sale prices.
         </p>
       </div>
+
+      
+
+      {/* Product inventory */}
+      {!hasVariants ? (
+      <section className="space-y-4 rounded-xl border p-4">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">Product Inventory</h3>
+
+          <p className="text-sm text-muted-foreground">
+            Control inventory tracking for products without variants. Products
+            with variants use their own stock.
+          </p>
+        </div>
+
+        <input type="hidden" name="inventoryConfigured" value="true" />
+
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            name="trackInventory"
+            value="on"
+            checked={trackInventory}
+            onChange={(event) => setTrackInventory(event.target.checked)}
+            className="size-4 accent-primary"
+          />
+
+          <span className="font-medium">Track Inventory</span>
+        </label>
+
+        {trackInventory ? (
+          <div className="space-y-2">
+            <label
+              htmlFor="edit-product-stock"
+              className="block text-sm font-medium"
+            >
+              Stock Quantity
+            </label>
+
+            <input
+              id="edit-product-stock"
+              name="stockQuantity"
+              type="number"
+              min={0}
+              max={2147483647}
+              step={1}
+              inputMode="numeric"
+              value={stockQuantity}
+              onChange={(event) => setStockQuantity(event.target.value)}
+              required
+              className="w-full rounded-md border bg-background px-3 py-2"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Zero units means Sold Out. Increasing stock above zero makes an
+              active product available again.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Inventory is not tracked for this product.
+          </p>
+        )}
+      </section>
+      ) : (
+        null
+      )}
 
       {/* Server action feedback */}
       {state?.message && (

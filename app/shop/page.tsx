@@ -91,6 +91,7 @@ const ShopPage = async () => {
                 key={product.uuid}
                 rating={ratingsByProduct.get(product.uuid) ?? null}
                 product={{
+                  uuid: product.uuid,
                   slug: product.slug,
                   name: product.name,
                   priceCents: product.priceCents,
@@ -98,6 +99,7 @@ const ShopPage = async () => {
                   active: product.active,
                   image: product.images[0] ?? null,
                   variants: product.variants,
+                  stockQuantity: product.stockQuantity,
                 }}
               />
             ))}

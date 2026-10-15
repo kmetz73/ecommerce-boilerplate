@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   catalogProductLookupSchema,
   parseProductFormData,
+  ProductFormValidationError,
   productSchema,
 } from './product';
 
@@ -15,6 +16,52 @@ describe('productSchema', () => {
       expect(() => parseProductFormData(form)).toThrow();
     }
   });
+  // Lesson 26 — Inventory validation tests
+
+  it('accepts zero stock when inventory tracking is enabled', () => {
+    const form = new FormData();
+
+    form.set('name', 'Test Product');
+    form.set('priceDollars', '42.00');
+    form.set('inventoryConfigured', 'true');
+    form.set('trackInventory', 'on');
+    form.set('stockQuantity', '0');
+
+    const result = parseProductFormData(form);
+
+    expect(result.stockQuantity).toBe(0);
+  });
+
+  it('clears inventory tracking when unchecked', () => {
+    const form = new FormData();
+
+    form.set('name', 'Test Product');
+    form.set('priceDollars', '42.00');
+    form.set('inventoryConfigured', 'true');
+    form.set('stockQuantity', '10');
+
+    const result = parseProductFormData(form);
+
+    expect(result.stockQuantity).toBeNull();
+  });
+
+  it('rejects invalid stock quantities', () => {
+    for (const value of ['-1', '1.5', '', 'abc', '2147483648']) {
+      const form = new FormData();
+
+      form.set('name', 'Test Product');
+      form.set('priceDollars', '42.00');
+      form.set('inventoryConfigured', 'true');
+      form.set('trackInventory', 'on');
+      form.set('stockQuantity', value);
+
+      expect(() => parseProductFormData(form)).toThrow(
+        ProductFormValidationError
+      );
+    }
+  });
+});
+  
   it('accepts a valid product', () => {
     const result = productSchema.safeParse({
       name: 'Storm Phaze II',
@@ -76,7 +123,8 @@ describe('productSchema', () => {
       'Product name is required'
     );
   });
-});
+  
+
 
 describe('catalogProductLookupSchema', () => {
   it('accepts a valid product UUID', () => {

@@ -5,6 +5,7 @@ type ProductPricing = {
   priceCents: number;
   salePriceCents: number | null;
   active: boolean;
+  stockQuantity?: number | null;
 };
 
 type CatalogVariant = {
@@ -31,13 +32,20 @@ export const getCatalogPricing = (
   return {
     ...pricing,
     displayPriceCents: pricing.salePriceCents ?? pricing.priceCents,
+
     isAvailable:
       product.active &&
-      (variants.length === 0 || variants.some((variant) =>
-        variant.active &&
-        variant.stockQuantity > 0 &&
-        productVariantSchema.shape.optionValues.safeParse(variant.optionValues).success
-      )),
+      (variants.length === 0
+        ? product.stockQuantity == null || product.stockQuantity > 0
+        : variants.some(
+            (variant) =>
+              variant.active &&
+              variant.stockQuantity > 0 &&
+              productVariantSchema.shape.optionValues.safeParse(
+                variant.optionValues
+              ).success
+          )),
+
     showFrom: false,
   };
 };

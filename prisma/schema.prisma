@@ -25,6 +25,7 @@ model User {
   role     Role      @default(USER)
   products Product[]
   reviews  Review[]
+  cart     Cart?
 
   @@map("users")
 }
@@ -44,6 +45,8 @@ model Product {
   images         ProductImage[]
   variants       ProductVariant[]
   reviews        Review[]
+  stockQuantity  Int?             @map("stock_quantity")
+  cartItems      CartItem[]
 
   @@map("products")
 }
@@ -63,16 +66,17 @@ model ProductImage {
 }
 
 model ProductVariant {
-  uuid           String   @id @default(uuid()) @db.Uuid
-  productUuid    String   @map("product_uuid") @db.Uuid
-  sku            String   @unique
-  optionValues   Json     @map("option_values")
-  priceCents     Int?     @map("price_cents")
-  salePriceCents Int?     @map("sale_price_cents")
-  stockQuantity  Int      @default(0) @map("stock_quantity")
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  uuid           String     @id @default(uuid()) @db.Uuid
+  productUuid    String     @map("product_uuid") @db.Uuid
+  sku            String     @unique
+  optionValues   Json       @map("option_values")
+  priceCents     Int?       @map("price_cents")
+  salePriceCents Int?       @map("sale_price_cents")
+  stockQuantity  Int        @default(0) @map("stock_quantity")
+  active         Boolean    @default(true)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  cartItems      CartItem[]
 
   product Product @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
 
@@ -97,4 +101,37 @@ model Review {
   @@unique([productUuid, userId])
   @@index([productUuid, status])
   @@map("reviews")
+}
+
+model Cart {
+  uuid           String   @id @default(uuid()) @db.Uuid
+  userId         Int?     @unique @map("user_id")
+  guestTokenHash String?  @unique @map("guest_token_hash")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  uuid         String   @id @default(uuid()) @db.Uuid
+  cartUuid     String   @map("cart_uuid") @db.Uuid
+  productUuid  String   @map("product_uuid") @db.Uuid
+  variantUuid  String?  @map("variant_uuid") @db.Uuid
+  selectionKey String   @map("selection_key")
+  quantity     Int
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  cart    Cart            @relation(fields: [cartUuid], references: [uuid], onDelete: Cascade)
+  product Product         @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantUuid], references: [uuid], onDelete: Cascade)
+
+  @@unique([cartUuid, selectionKey])
+  @@index([productUuid])
+  @@index([variantUuid])
+  @@map("cart_items")
 }

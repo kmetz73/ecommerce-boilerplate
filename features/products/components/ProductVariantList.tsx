@@ -71,15 +71,27 @@ const ProductVariantList = async ({
                       </h3>
                     </div>
 
-                    <span
-                      className={
-                        variant.active
-                          ? 'inline-flex rounded-full bg-green-500/15 px-3 py-1 text-sm font-medium text-green-500'
-                          : 'inline-flex rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground'
-                      }
-                    >
-                      {variant.active ? 'Active' : 'Inactive'}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={
+                          variant.active
+                            ? 'rounded-full bg-green-500/15 px-3 py-1 text-sm font-medium text-green-500'
+                            : 'rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground'
+                        }
+                      >
+                        {variant.active ? 'Active' : 'Inactive'}
+                      </span>
+
+                      <span
+                        className={
+                          variant.stockQuantity > 0
+                            ? 'rounded-full bg-green-500/15 px-3 py-1 text-sm font-medium text-green-500'
+                            : 'rounded-full bg-amber-500/15 px-3 py-1 text-sm font-medium text-amber-600 dark:text-amber-400'
+                        }
+                      >
+                        {variant.stockQuantity > 0 ? 'In Stock' : 'Sold Out'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Variant options */}

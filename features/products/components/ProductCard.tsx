@@ -8,6 +8,7 @@ import { getCatalogPricing } from '@/features/products/lib/catalog-pricing';
 import StarRatingDisplay from '@/features/reviews/components/StarRatingDisplay';
 
 import type { ProductRatingSummary } from '@/features/reviews/data/rating-summaries';
+import AddToCartButton from '@/features/cart/components/AddToCartButton';
 
 type ProductCardImage = {
   id: string;
@@ -24,6 +25,7 @@ type ProductCardVariant = {
 
 type ProductCardProps = {
   product: {
+    uuid: string;
     slug: string;
     name: string;
     priceCents: number;
@@ -31,6 +33,7 @@ type ProductCardProps = {
     active: boolean;
     image?: ProductCardImage | null;
     variants?: ProductCardVariant[];
+    stockQuantity?: number | null;
   };
 
   rating?: ProductRatingSummary | null;
@@ -38,6 +41,7 @@ type ProductCardProps = {
 
 const ProductCard = ({ product, rating }: ProductCardProps) => {
   const productUrl = `/products/${product.slug}`;
+  const hasVariants = (product.variants?.length ?? 0) > 0;
 
   // Use our existing product pricing rules.
   const pricing = getCatalogPricing(
@@ -45,9 +49,11 @@ const ProductCard = ({ product, rating }: ProductCardProps) => {
       priceCents: product.priceCents,
       salePriceCents: product.salePriceCents ?? null,
       active: product.active,
+      stockQuantity: product.stockQuantity,
     },
     product.variants ?? []
   );
+  
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
@@ -101,9 +107,32 @@ const ProductCard = ({ product, rating }: ProductCardProps) => {
         )}
 
         {/* Availability */}
-        <p className="mt-auto text-sm text-muted-foreground">
-          {pricing.isAvailable ? 'Available' : 'Sold out'}
-        </p>
+
+        {/* Product availability and cart actions */}
+        <div className="mt-auto space-y-3 pt-3">
+          <p className="text-sm text-muted-foreground">
+            {pricing.isAvailable ? 'Available' : 'Sold out'}
+          </p>
+
+          {!pricing.isAvailable ? (
+            <button
+              type="button"
+              disabled
+              className="w-full cursor-not-allowed rounded-md border bg-muted px-3 py-3 text-sm font-semibold text-muted-foreground"
+            >
+              Sold Out
+            </button>
+          ) : hasVariants ? (
+            <Link
+              href={productUrl}
+              className="flex w-full items-center justify-center rounded-md border px-3 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+            >
+              Choose Options
+            </Link>
+          ) : (
+            <AddToCartButton productUuid={product.uuid} />
+          )}
+        </div>
       </div>
     </article>
   );

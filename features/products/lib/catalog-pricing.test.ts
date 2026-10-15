@@ -136,3 +136,25 @@ it('ignores legacy sales when the product has no sale and falls back from invali
     expect(getCatalogPricing({ priceCents: 39900, salePriceCents, active: true }, [variant]).displayPriceCents).toBe(39900);
   }
 });
+
+
+it('respects finite inventory for nonvariant products', () => {
+  const product = {
+    priceCents: 1999,
+    salePriceCents: null,
+    active: true,
+  };
+
+  expect(
+    getCatalogPricing({ ...product, stockQuantity: 0 }, []).isAvailable
+  ).toBe(false);
+
+  expect(
+    getCatalogPricing({ ...product, stockQuantity: 5 }, []).isAvailable
+  ).toBe(true);
+
+  expect(
+    getCatalogPricing({ ...product, stockQuantity: null }, []).isAvailable
+  ).toBe(true);
+});
+

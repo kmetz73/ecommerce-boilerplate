@@ -160,6 +160,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
               <ProductCard
                 rating={ratingsByProduct.get(product.uuid) ?? null}
                 product={{
+                  uuid: product.uuid,
                   slug: product.slug,
                   name: product.name,
                   priceCents: product.priceCents,
@@ -167,6 +168,7 @@ const ProductsPage = async ({ searchParams }: ProductsPageProps) => {
                   active: product.active,
                   image: product.images[0] ?? null,
                   variants: product.variants,
+                  stockQuantity: product.stockQuantity,
                 }}
               />
 

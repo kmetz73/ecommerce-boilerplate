@@ -11,6 +11,7 @@ import { getProductImages } from '@/features/products/data/product-images';
 import { requireAdminPage } from '@/lib/auth/require-admin-page';
 import CreateProductVariantForm from '@/features/products/components/CreateProductVariantForm';
 import ProductVariantList from '@/features/products/components/ProductVariantList';
+import { getProductVariants } from '@/features/products/data/product-variants';
 
 type EditProductPageProps = {
   params: Promise<{
@@ -42,6 +43,10 @@ const EditProductPage = async ({
   }
 
   const images = await getProductImages(product.uuid);
+
+const variants = await getProductVariants(product.uuid);
+const hasVariants = variants.length > 0;
+
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
@@ -83,7 +88,7 @@ const EditProductPage = async ({
             </p>
           </div>
 
-          <EditProductForm product={product} />
+          <EditProductForm product={product} hasVariants={hasVariants} />
         </section>
 
         {/* Right: Image management */}
