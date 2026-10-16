@@ -17,15 +17,25 @@ enum ReviewStatus {
   HIDDEN
 }
 
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CANCELED
+  EXPIRED
+  REFUNDED
+}
+
 model User {
-  id       Int       @id @default(autoincrement())
-  clerkId  String    @unique @map("clerk_id")
-  name     String
-  email    String    @unique
-  role     Role      @default(USER)
-  products Product[]
-  reviews  Review[]
-  cart     Cart?
+  id        Int               @id @default(autoincrement())
+  clerkId   String            @unique @map("clerk_id")
+  name      String
+  email     String            @unique
+  role      Role              @default(USER)
+  products  Product[]
+  reviews   Review[]
+  cart      Cart?
+  orders    Order[]
+  addresses CustomerAddress[]
 
   @@map("users")
 }
@@ -47,6 +57,7 @@ model Product {
   reviews        Review[]
   stockQuantity  Int?             @map("stock_quantity")
   cartItems      CartItem[]
+  orderItems     OrderItem[]
 
   @@map("products")
 }
@@ -66,17 +77,18 @@ model ProductImage {
 }
 
 model ProductVariant {
-  uuid           String     @id @default(uuid()) @db.Uuid
-  productUuid    String     @map("product_uuid") @db.Uuid
-  sku            String     @unique
-  optionValues   Json       @map("option_values")
-  priceCents     Int?       @map("price_cents")
-  salePriceCents Int?       @map("sale_price_cents")
-  stockQuantity  Int        @default(0) @map("stock_quantity")
-  active         Boolean    @default(true)
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  uuid           String      @id @default(uuid()) @db.Uuid
+  productUuid    String      @map("product_uuid") @db.Uuid
+  sku            String      @unique
+  optionValues   Json        @map("option_values")
+  priceCents     Int?        @map("price_cents")
+  salePriceCents Int?        @map("sale_price_cents")
+  stockQuantity  Int         @default(0) @map("stock_quantity")
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
   cartItems      CartItem[]
+  orderItems     OrderItem[]
 
   product Product @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
 
@@ -134,4 +146,86 @@ model CartItem {
   @@index([productUuid])
   @@index([variantUuid])
   @@map("cart_items")
+}
+
+model Order {
+  uuid                    String                @id @default(uuid()) @db.Uuid
+  userId                  Int                   @map("user_id")
+  status                  OrderStatus           @default(PENDING_PAYMENT)
+  currency                String                @default("usd")
+  subtotalCents           Int                   @map("subtotal_cents")
+  shippingCents           Int                   @default(0) @map("shipping_cents")
+  taxCents                Int                   @default(0) @map("tax_cents")
+  totalCents              Int                   @map("total_cents")
+  stripeCheckoutSessionId String?               @unique @map("stripe_checkout_session_id")
+  stripePaymentIntentId   String?               @unique @map("stripe_payment_intent_id")
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @updatedAt @map("updated_at")
+  
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items                OrderItem[] 
+  shippingAddress         OrderShippingAddress?
+
+
+  @@index([userId, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  uuid           String  @id @default(uuid()) @db.Uuid
+  orderUuid      String  @map("order_uuid") @db.Uuid
+  productUuid    String? @map("product_uuid") @db.Uuid
+  variantUuid    String? @map("variant_uuid") @db.Uuid
+  productName    String  @map("product_name")
+  variantLabel   String? @map("variant_label")
+  quantity       Int
+  unitPriceCents Int     @map("unit_price_cents")
+  subtotalCents  Int     @map("subtotal_cents")
+
+  order   Order           @relation(fields: [orderUuid], references: [uuid], onDelete: Cascade)
+  product Product?        @relation(fields: [productUuid], references: [uuid], onDelete: SetNull)
+  variant ProductVariant? @relation(fields: [variantUuid], references: [uuid], onDelete: SetNull)
+
+  @@index([orderUuid])
+  @@map("order_items")
+}
+
+model CustomerAddress {
+  uuid        String   @id @default(uuid()) @db.Uuid
+  userId      Int      @map("user_id")
+  label       String?
+  fullName    String   @map("full_name")
+  line1       String
+  line2       String?
+  city        String
+  region      String
+  postalCode  String   @map("postal_code")
+  countryCode String   @default("US") @map("country_code")
+  phone       String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("customer_addresses")
+}
+
+model OrderShippingAddress {
+  uuid        String   @id @default(uuid()) @db.Uuid
+  orderUuid   String   @unique @map("order_uuid") @db.Uuid
+  fullName    String   @map("full_name")
+  line1       String
+  line2       String?
+  city        String
+  region      String
+  postalCode  String   @map("postal_code")
+  countryCode String   @map("country_code")
+  phone       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderUuid], references: [uuid], onDelete: Cascade)
+
+  @@map("order_shipping_addresses")
 }

@@ -11,7 +11,7 @@ type CartSummaryProps = {
 };
 
 const CartSummary = ({ onContinue }: CartSummaryProps) => {
-  const { cart } = useCart();
+  const { cart, loading, pending } = useCart();
 
   return (
     <section className="shrink-0 space-y-3 border-t px-5 py-3">
@@ -30,21 +30,34 @@ const CartSummary = ({ onContinue }: CartSummaryProps) => {
       </p>
 
       {/* Inventory warnings */}
-      {!cart.canCheckout && cart.items.length > 0 && (
+
+      {/* Inventory warning */}
+      {!loading && !cart.canCheckout && cart.items.length > 0 && (
         <p className="text-sm text-destructive">
           Please resolve unavailable items before checkout.
         </p>
-      )}
+      )} 
 
       {/* Checkout */}
-      <button
-        type="button"
-        disabled
-        className="flex w-full items-center justify-center gap-2 rounded-md bg-foreground px-5 py-3 font-semibold text-background opacity-60"
-      >
-        Checkout
-        <ArrowRight size={18} />
-      </button>
+
+      {cart.canCheckout && cart.items.length > 0 ? (
+        <Link
+          href="/checkout"
+          onClick={onContinue}
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-foreground px-5 py-3 font-semibold text-background transition-opacity hover:opacity-90"
+          style={{ color: '#111827' }}
+        >
+          Checkout <ArrowRight size={18} />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md bg-muted px-5 py-3 font-semibold text-muted-foreground opacity-60"
+        >
+          Checkout <ArrowRight size={18} />
+        </button>
+      )}
 
       {/* Continue shopping */}
       <Link

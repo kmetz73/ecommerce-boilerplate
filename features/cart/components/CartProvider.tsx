@@ -32,6 +32,7 @@ type CartContextValue = {
   pending: boolean;
   error: string | null;
   isOpen: boolean;
+  refreshCart: () => Promise<void>;
   setOpen: (value: boolean) => void;
   addItem: (
     productUuid: string,
@@ -96,6 +97,47 @@ const CartProvider = ({ children }: CartProviderProps) => {
       active = false;
     };
   }, [isLoaded, userId]);
+
+
+const refreshCart = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const latestCart = await fetchCartAction();
+    setCart(latestCart);
+  } catch {
+    setError('Unable to refresh your cart.');
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+// Refresh inventory whenever the shopping bag opens.
+useEffect(() => {
+  if (!isLoaded || !isOpen || pending) return;
+
+  void refreshCart();
+}, [isLoaded, isOpen, pending, refreshCart]);
+
+
+useEffect(() => {
+  if (!isLoaded || !isOpen) return;
+
+  const refreshWhenReturning = () => {
+    if (document.visibilityState === 'visible') {
+      void refreshCart();
+    }
+  };
+
+  document.addEventListener('visibilitychange', refreshWhenReturning);
+
+  return () => {
+    document.removeEventListener('visibilitychange', refreshWhenReturning);
+  };
+}, [isLoaded, isOpen, refreshCart]);
+
+
 
   const runMutation = useCallback(
     async (
@@ -180,6 +222,7 @@ const CartProvider = ({ children }: CartProviderProps) => {
         error,
         isOpen,
         setOpen,
+        refreshCart,
         addItem,
         updateQuantity,
         removeItem,
